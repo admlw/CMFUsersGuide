@@ -27,3 +27,20 @@ art -c cmf_covariancematrixmakerjob.fcl
 \end{lstlisting}
 
 \subsection{On The Grid}
+
+Running on the grid is made easy by the existence of a bash script, located in 
+\begin{lstlisting}
+CovarianceMatrixFit/scripts/CMF_Run_Covariance_Grid.sh
+\end{lstlisting}
+which has a usage:
+\begin{lstlisting}
+usage: CMF_Run_Covariance_Grid.sh <systematics> <eventlist file> <local products> <output dir>
+<systematics>:    specify one of calib, genie, mec, nue, norm, reco, xsec1, xsec2, xsec3
+<eventlist file>: full path to event list tree file in pnfs
+<local products>: name of the local products directory
+<output dir>:     top level directory for output matrix root files
+\end{lstlisting}
+
+where the \lstinline{<local products>} is the name of a tar file (without the \lstinline|.tar.bz2|) which should be stored in your scratch area (\lstinline|/pnfs/scratch/users/${USER}|).
+
+This script by default will run a set of several uncertainties defined by the \lstinline|<systematics>| tag. Each systematic uncertainty will have by default 2000 systematic universes across 200 grid jobs. This can be modified by changing the variables in the \lstinline|setVariables()| function in the bash script.
