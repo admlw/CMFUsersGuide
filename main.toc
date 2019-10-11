@@ -1,0 +1,5 @@
+\contentsline {section}{\numberline {1}Introduction}{1}
+\contentsline {section}{\numberline {2}Structure}{1}
+\contentsline {section}{\numberline {3}Generating Covariance Matrices}{2}
+\contentsline {subsection}{\numberline {3.1}Locally}{2}
+\contentsline {subsection}{\numberline {3.2}On The Grid}{3}

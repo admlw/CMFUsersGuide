@@ -1,0 +1,56 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[numbers]{natbib}   % reference package
+\usepackage{amsmath}          % american math society
+\usepackage{amsfonts}         %--"-- fonts
+\usepackage{amssymb}          %---"-- symbols
+\usepackage{graphicx}         % needed for options for images
+\usepackage{subcaption}       % using subcaptions
+\usepackage{lmodern}  % for bold teletype font
+\usepackage{xcolor}   % for \textcolor
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible,
+  frame=single,
+  breaklines=true,
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+}
+
+
+%% deal with geometry
+\usepackage[
+	top=1in,
+	bottom=1in,
+	left=1in,
+	right=1in]{geometry}
+
+%% set spacing, double for normal text, 1 1/2 for captions
+\usepackage{setspace}
+\doublespacing
+\usepackage[font=onehalfspacing]{caption}
+
+% bibliography stuff
+\bibliographystyle{ieetran}
+
+\title{Covariance Matrix Fit Users' Guide}
+\author{Tom Carroll, Adam Lister and Brian Rebel}
+\date{May 2019}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    This technote details a new method for performing fits for oscillation parameters by using covariance matrices.
+\end{abstract}
+
+\tableofcontents
+
+\input{introduction/introduction}
+
+\input{structure/structure}
+
+\input{generatingcovariancematrices/generatingcovariancematrices}
+
+\end{document}

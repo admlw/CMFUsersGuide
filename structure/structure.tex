@@ -1,0 +1,14 @@
+\section{Structure}
+
+The CMF code lives within \lstinline{nova/CovarianceMatrixFit}. Within this directory there are several directories:
+
+\begin{lstlisting}
+core 		: the core classes that CMF is built on: EventLists, VarVals, ShifterAndWeighter
+data		: contains root files for calibration systematic uncertainties
+dataProducts: data products and structs commonly used in CMF analysis
+fhicl		: contains all fhicl files
+macros 		: useful .C files
+modules 	: art modules and plugins which are run with fhicl files
+scripts 	: scripts for, i.e. submitting to the grid
+utilities   : only the bin utility lives here, this may be removed in the future
+\end{lstlisting}

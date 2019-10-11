@@ -1,0 +1,29 @@
+\section{Generating Covariance Matrices}
+
+This section contains information on how to generate covariance matrices for a given systematic uncertainty both locally.
+
+\subsection{Locally}
+
+In order to generate a covariance matrix locally, a single fhicl file can be run \footnote{I'd recommend copying this to your \lstinline{/nova/ana/users/${USER}} area and running from there.},\\
+\begin{lstlisting}[language=bash]
+cmf_covariancematrixmakerjob.fcl
+\end{lstlisting}
+\footnote{Ensure you're using the CMF version of this file. Another version, \lstinline{covariancematrixmakerjob.fcl} exists, but is related to the FNEX framework and is not what you should be running.
+}
+
+Inside this fhicl file, there are three options that a user should configure:\\
+\begin{lstlisting}
+TREEFILE	: Path to EventList file. For now these are located in /nova/ana/users/brebel/skimmed
+SYSTPAR		: Systematic parameter to vary
+NITER		: Number of iterations of the systematic to run (i.e. number of universes)
+\end{lstlisting}
+
+The options for which systematics you can choose can be found in \lstinline{CMF_SystematicParameters.fcl}
+
+Once these substitutions have been made, a covariance matrix can be generated with the following command
+
+\begin{lstlisting}
+art -c cmf_covariancematrixmakerjob.fcl
+\end{lstlisting}
+
+\subsection{On The Grid}
