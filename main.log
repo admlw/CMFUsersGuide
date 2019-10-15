@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018) (preloaded format=pdflatex 2018.4.16)  14 OCT 2019 20:46
+=======
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2019.10.11)  12 OCT 2019 10:07
+>>>>>>> 1f57ae05e4cde6b34548d531478da3179d90e63c
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -475,6 +479,7 @@ Overfull \hbox (2.31415pt too wide) in paragraph at lines 64--65
 
 [8]) [9] (./main.aux) ) 
 Here is how much of TeX's memory you used:
+<<<<<<< HEAD
  6726 strings out of 492649
  95119 string characters out of 6129622
  252054 words of memory out of 5000000
@@ -498,6 +503,26 @@ type1/public/lm/lmri12.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/publ
 ic/lm/lmsy10.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmtt
 10.pfb></usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmtt12.pfb>
 Output written on main.pdf (9 pages, 274391 bytes).
+=======
+ 7014 strings out of 492982
+ 96333 string characters out of 6134895
+ 267579 words of memory out of 5000000
+ 10441 multiletter control sequences out of 15000+600000
+ 53520 words of font info for 60 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 42i,8n,51p,423b,1178s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texmf/fonts/enc/dvips/lm/lm-rmtt.enc}{/usr/s
+hare/texmf/fonts/enc/dvips/lm/lm-rm.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm
+-mathsy.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathit.enc}</usr/share/texm
+f/fonts/type1/public/lm/lmbx10.pfb></usr/share/texmf/fonts/type1/public/lm/lmbx
+12.pfb></usr/share/texmf/fonts/type1/public/lm/lmmi12.pfb></usr/share/texmf/fon
+ts/type1/public/lm/lmr10.pfb></usr/share/texmf/fonts/type1/public/lm/lmr12.pfb>
+</usr/share/texmf/fonts/type1/public/lm/lmr17.pfb></usr/share/texmf/fonts/type1
+/public/lm/lmr7.pfb></usr/share/texmf/fonts/type1/public/lm/lmr8.pfb></usr/shar
+e/texmf/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/public/l
+m/lmtt10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt12.pfb>
+Output written on main.pdf (4 pages, 229897 bytes).
+>>>>>>> 1f57ae05e4cde6b34548d531478da3179d90e63c
 PDF statistics:
  90 PDF objects out of 1000 (max. 8388607)
  65 compressed objects within 1 object stream
