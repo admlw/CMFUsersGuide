@@ -7,79 +7,83 @@ This section details how to generate a CMF-style tree of selected events using t
 The CovarianceMatrixFit package provides an art module to read the decaf or concatenated CAF files from a SAM dataset and produce output files containing the necessary TTrees to use as event lists in CMF.  It also has a set of scripts that can be used to run that process.
 
 \subsubsection{art Module: CMFCAFToEventLists}
-The module is located at {\it CovarianceMatrixFit/modules/CMFCAFToEventLists\_module.cc}.  The module is an EDAnalyzer, but does not actually do anything in the analyze method because the CAFs are not art files.  We use a module here to be able to configure the conversion job and because art provides a nice state machine that processes jobs in a particular order.  All the work of the module is done from methods called by the module's {\it endJob} method.  The {\it CMFCAFToEventLists::FillVariables()} method calls other methods to fill the {\it cmf::DataVarVals}, {\it cmf::EventId} and {\it cmf::MCVarVals} objects.  It also calls methods to determine if the event passes the event selection determined through the configuration.  The code is the best resource for understanding how these steps are accomplished and details will not be given here.  Once the events have been selected they are written into ROOT TTrees based on the metadata information for each event.  
+The module is located at \lstinline{CovarianceMatrixFit/modules/CMFCAFToEventLists\_module.cc}.  The module is an EDAnalyzer, but does not actually do anything in the analyze method because the CAFs are not art files.  We use a module here to be able to configure the conversion job and because art provides a nice state machine that processes jobs in a particular order.  All the work of the module is done from methods called by the module's \lstinline{endJob} method.  The \lstinline{CMFCAFToEventLists::FillVariables()} method calls other methods to fill the \lstinline{cmf::DataVarVals}, \lstinline{cmf::EventId} and \lstinline{cmf::MCVarVals} objects.  It also calls methods to determine if the event passes the event selection determined through the configuration.  The code is the best resource for understanding how these steps are accomplished and details will not be given here.  Once the events have been selected they are written into ROOT TTrees based on the metadata information for each event.  
 
 \subsubsection{script: makeEventListsFromDecaf.sh}
 
-The script that runs the above module is located at {\it CovarianceMatrixFit/scripts/makeEventListsFromDecaf.sh}.  It has six functions; one function prints the necessary command line inputs to the terminal when the script is called without inputs.  The output from that function is
-\begin{itemize}
- \item Usage: makeEventLists.sh $<outdir> <detector> <file type> <selection> <horn current> <files per iteration> <tag> <systematic name>$
- \item $<outdir>$: directory where the output root files will go
- \item $<detector>$: Near or Far
- \item $<file type>$: data, nonswap, fluxswap, tauswap, cosmicbackground, rockfluxswap, rocknonswap
- \item $<selection>$: NuESel, NCSel, or NuMuSel
- \item $<horn current>$: fhc or rhc
- \item $<files per iteration>$: number of files for each subjob
- \item $<tag>$: analysis tag, eg 2018, 2019
- \item $<systematic name>$: optional name for systematically shifted set
-\end{itemize}
+The script that runs the above module is located at 
+\begin{lstlisting}
+CovarianceMatrixFit/scripts/makeEventListsFromDecaf.sh.
+\end{lstlisting}
+It has six functions; one function prints the necessary command line inputs to the terminal when the script is called without inputs.  The output from that function is
+\begin{lstlisting}
+ Usage: makeEventLists.sh <outdir> <detector> <file type> <selection> <horn current> <files per iteration> <tag> <systematic name>
+ <outdir>: directory where the output root files will go
+ <detector>: Near or Far
+ <file type>: data, nonswap, fluxswap, tauswap, cosmicbackground, rockfluxswap, rocknonswap
+ <selection>: NuESel, NCSel, or NuMuSel
+ <horn current>: fhc or rhc
+ <files per iteration>: number of files for each subjob
+ <tag>: analysis tag, eg 2018, 2019
+ <systematic name>: optional name for systematically shifted set
+\end{lstlisting}
 The last argument is optional and is only used when making event lists for systematically shifted datasets.
 
-The remaining functions handle converting files from SAM datasets containing the concatenated CAF files. The most important function for converting the concatenated CAF files is {\it makeXROOTDFile} which creates a text file containing the xrootd location of the concatenated CAF files.  This method checks which combination of detector, file type, selection, and horn current is being requested and then creates the corresponding SAM dataset name from those inputs.  {\bf NB:} the SAM dataset name is not dynamically determined based on the production run desired.  The base of the name must be changed by hand for each production run.
+The remaining functions handle converting files from SAM datasets containing the concatenated CAF files. The most important function for converting the concatenated CAF files is \lstinline{makeXROOTDFile} which creates a text file containing the xrootd location of the concatenated CAF files.  This method checks which combination of detector, file type, selection, and horn current is being requested and then creates the corresponding SAM dataset name from those inputs.  {\bf NB:} the SAM dataset name is not dynamically determined based on the production run desired.  The base of the name must be changed by hand for each production run.
 
-The script configures the art job to produce a text file containing the event identification information, ie run, subrun, event, slice, and cycle numbers, the event energy, and the CVN value for the event.  This text file has a name of the form $selectedEvents\_<detector>\_<selection>\_<horn current>\_<file type>\_<systematic>\_<analysis tag>.txt$. 
+The script configures the art job to produce a text file containing the event identification information, ie run, subrun, event, slice, and cycle numbers, the event energy, and the CVN value for the event.  This text file has a name of the form \lstinline{selectedEvents_<detector>_<selection>_<horn current>_<file type>_<systematic>_<analysis tag>.txt}. 
 
 \subsubsection{script: startEventLists.sh}
 
-The script that calls the {\it makeEventListsFromDecaf.sh} script is located at {\it CovarianceMatrixFit/scripts/startEventLists.sh}.  If the script is called without arguments it prints the necessary command line inputs to the terminal,
-\begin{itemize}
-  \item Usage: startEventLists.sh $<detector> <file type> <files per iteration> <tag> <systematic\_name>$
-  \item $<detector>$: Near or Far
-  \item $<file type>$: data, nonswap, fluxswap, tauswap, cosmicbackground, rockfluxswap, rocknonswap
-  \item $<files per iteration>$: number of files for each subjob
-  \item $<tag>$: analysis tag, eg 2018, 2019
-  \item $<outdir>$: location where the output root files should go
-  \item $<systematic name>$: optional name for systematically shifted set
-\end{itemize}
-The script will start a series of jobs that run locally and in the background to convert each of the possible event selections and horn currents available in the {\it makeEventListsFromDecaf.sh} script.
+The script that calls the \lstinline{makeEventListsFromDecaf.sh} script is located at \lstinline{CovarianceMatrixFit/scripts/startEventLists.sh}.  If the script is called without arguments it prints the necessary command line inputs to the terminal,
+\begin{lstlisting}
+  Usage: startEventLists.sh <detector> <file type> <files per iteration> <tag> <systematic\_name>
+  <detector>: Near or Far
+  <file type>: data, nonswap, fluxswap, tauswap, cosmicbackground, rockfluxswap, rocknonswap
+  <files per iteration>: number of files for each subjob
+  <tag>: analysis tag, eg 2018, 2019
+  <outdir>: location where the output root files should go
+  <systematic name>: optional name for systematically shifted set
+\end{lstlisting}
+The script will start a series of jobs that run locally and in the background to convert each of the possible event selections and horn currents available in the \lstinline{makeEventListsFromDecaf.sh} script.
 
 \subsection{Producing CAF Text Lists}
 
 \subsubsection{cafe macro: get\_eventlist.C}
 
-The {\it CovarianceMatrixFit/macros/cafe/get\_eventlist.C} macro will use the {\it cafe} macro to create a text file list of events from a given SAM CAF concatenated dataset.  The script has to be provided with the desired SAM dataset name, the name of the output text file, the selection to use and the detector. Those values are given nonsense default values which can be replaced easily using a {\it sed} command as is done in the {\it CovarianceMatrixFit/scripts/compareEventLists.sh} script discussed next.  If one wants to change the values at run time they can be given as arguments to the macro at run time as well. The output file name has the form $cafEvents\_<detector>\_<selection>\_<horn current>\_<file type>\_<systematic>\_<analysis tag>.txt$.
+The \lstinline{CovarianceMatrixFit/macros/cafe/get\_eventlist.C} macro will use the \lstinline{cafe} macro to create a text file list of events from a given SAM CAF concatenated dataset.  The script has to be provided with the desired SAM dataset name, the name of the output text file, the selection to use and the detector. Those values are given nonsense default values which can be replaced easily using a \lstinline{sed} command as is done in the \lstinline{CovarianceMatrixFit/scripts/compareEventLists.sh} script discussed next.  If one wants to change the values at run time they can be given as arguments to the macro at run time as well. The output file name has the form \lstinline{cafEvents_<detector>_<selection>_<horn current>_<file type>_<systematic>_<analysis tag>.txt}.
 
 This macro must be run from a terminal that is set up to run novasoft in an SRT environment.  One cannot run the SRT and ups/CMake environments at the same time in the same terminal.
 
 \subsubsection{macro: compareEvents.C}
 
-The {\it CovarianceMattrixFit/macros/compareEvents.C} macro compares the output text files of selected events produced by the {\it CovarianceMatrixFit/macros/cafe/get\_eventlist.C} macro and the {\it CovarianceMatrixFit/modules/CMFCAFToEventLists\_module.cc} module.  The file names for the CAF and CMF text files are assumed to follow the forms indicated above.
+The \lstinline{CovarianceMattrixFit/macros/compareEvents.C} macro compares the output text files of selected events produced by the \lstinline{CovarianceMatrixFit/macros/cafe/get\_eventlist.C} macro and the \lstinline{CovarianceMatrixFit/modules/CMFCAFToEventLists\_module.cc} module. The file names for the CAF and CMF text files are assumed to follow the forms indicated above.
 
 This macro makes histograms comparing the selected number of events by CAF and CMF, including any events that are in one sample but not the other.  It also produces histograms showing the differences between the reconstructed energy, product of PPFX and cross section central value weights, and the CVN score.  The macro produces comparisons of the weighted and unweighted spectra as well.
 
 \subsubsection{script: compareEventLists.sh}
 
-The {\it CovarianceMatrixFit/scripts/compareEventLists.sh} script will run the {\it CovarianceMatrixFit/macros/cafe/get\_eventlist.C} macro and compare the output from that macro to the output text file from the {\it CovarianceMatrixFit/modules/CMFCAFToEventLists\_module.cc}.  This script also runs the {\it CovarianceMattrixFit/macros/compareEvents.C} macro described above. If the script is called without arguments it prints the necessary command line arguments to the screen,
-\begin{itemize}
-  \item Usage: compareEventLists.sh $<selection> <filetype> <tag> <systematic name>$
-  \item $<selection>$: nue, numu, nus
-  \item $<filetype>$: data, nonswap, fluxswap, tauswap, cosmicbackground, rockfluxswap, rocknonswap
-  \item $<tag>$: analysis tag, eg 2018, 2019
-  \item $<systematic name>$: optional name for systematically shifted set
-\end{itemize}
+The \lstinline{CovarianceMatrixFit/scripts/compareEventLists.sh} script will run the \lstinline{CovarianceMatrixFit/macros/cafe/get_eventlist.C} macro and compare the output from that macro to the output text file from the \lstinline{CovarianceMatrixFit/modules/CMFCAFToEventLists_module.cc}.  This script also runs the \lstinline{CovarianceMattrixFit/macros/compareEvents.C} macro described above. If the script is called without arguments it prints the necessary command line arguments to the screen,
+\begin{lstlisting}
+  Usage: compareEventLists.sh $<selection> <filetype> <tag> <systematic name>
+  <selection>: nue, numu, nus
+  <filetype>: data, nonswap, fluxswap, tauswap, cosmicbackground, rockfluxswap, rocknonswap
+  <tag>: analysis tag, eg 2018, 2019
+  <systematic name>: optional name for systematically shifted set
+\end{lstlisting}
 Both the SRT build of novasoft and samweb must be set up or the script will exit with a corresponding message. The script will compare all combinations of horn current and detector for the given set of selection and file  type chosen at run time.
 
 \subsection{Looking for Duplicate Events among Selections}
 
 \subsubsection{macro: compareSelectedSets.C}
 
-The {\it CovarianceMatrixFit/macros/compareSelectSets.C} macro compares the event lists in the text files produced by the {\it CovarianceMatrixFit/modules/CMFCAFToEventListsd\_module.cc} module to see if any events in one PID selection, ie $\nu_{\mu}$, $\nu_{e}$ or NC, overlaps with any other selection.  It requires the detector, the selections to be compared, the file type, horn current and analysis tag be specified.  The macro produces a text file containing the duplicated event identification information.  The produced file name has the form $duplicate\_list\_<detector>\_<selection 1>\_<selection 2>\_<horn current>\_<file type>\_<analysis tag>.txt$.  If one wanted to compare the CAF selected events, the macro would have to be edited such that the input lists to compare have file names starting with {\it cafEvents} rather than {\it selectedEvents}.
+The \lstinline{CovarianceMatrixFit/macros/compareSelectSets.C} macro compares the event lists in the text files produced by the \lstinline{CovarianceMatrixFit/modules/CMFCAFToEventListsd\_module.cc} module to see if any events in one PID selection, ie $\nu_{\mu}$, $\nu_{e}$ or NC, overlaps with any other selection.  It requires the detector, the selections to be compared, the file type, horn current and analysis tag be specified.  The macro produces a text file containing the duplicated event identification information.  The produced file name has the form \lstinline{duplicate_list_<detector>_<selection 1>_<selection 2>_<horn current>_<file type>_<analysis tag>.txt}.  If one wanted to compare the CAF selected events, the macro would have to be edited such that the input lists to compare have file names starting with \lstinline{cafEvents} rather than \lstinline{selectedEvents}.
 
 \subsection{script: compareSelections.sh}
 
-The {\it CovarianceMatrixFit/scripts/compareSelections.sh} script calls the {\it CovarianceMatrixFit/macros/compareSelectSets.C} macro for all combinations of detector, horn current and file type for the analysis tag and set of selections to compare. If the script is called without arguments it prints the necessary command line arguments to the screen,
-\begin{itemize}
-  \item Usage: compareSelections.sh $<tag> <selection 1> <selection 2>$
-  \item $<tag>$: analysis tag, eg 2018, 2019
-  \item $<selection X>$: nue, numu, nus
-\end{itemize}
+The \lstinline{CovarianceMatrixFit/scripts/compareSelections.sh} script calls the \lstinline{CovarianceMatrixFit/macros/compareSelectSets.C} macro for all combinations of detector, horn current and file type for the analysis tag and set of selections to compare. If the script is called without arguments it prints the necessary command line arguments to the screen,
+\begin{lstlisting}
+  Usage: compareSelections.sh $<tag> <selection 1> <selection 2>$
+  <tag>: analysis tag, eg 2018, 2019
+  <selection X>: nue, numu, nus
+\end{lstlisting}
