@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2019.10.11)  15 OCT 2019 10:55
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2019.10.11)  25 OCT 2019 10:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -774,12 +774,6 @@ ated at []
  []
 
 [6]
-Overfull \hbox (3.50706pt too wide) in paragraph at lines 54--55
-\OT1/lmr/m/n/12 The [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][
-][][][][][] macro will use the [][][][][] macro
- []
-
-
 Overfull \hbox (9.34407pt too wide) in paragraph at lines 60--61
 \OT1/lmr/m/n/12 files of se-lected events pro-duced by the [][][][][][][][][][]
 [][][][][][][][][][][][][][][]
@@ -823,7 +817,7 @@ blic/lm/lmr17.pfb></usr/share/texmf/fonts/type1/public/lm/lmr7.pfb></usr/share/
 texmf/fonts/type1/public/lm/lmr8.pfb></usr/share/texmf/fonts/type1/public/lm/lm
 sy10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt10.pfb></usr/share/texmf/f
 onts/type1/public/lm/lmtt12.pfb>
-Output written on main.pdf (9 pages, 250475 bytes).
+Output written on main.pdf (9 pages, 250482 bytes).
 PDF statistics:
  86 PDF objects out of 1000 (max. 8388607)
  62 compressed objects within 1 object stream
