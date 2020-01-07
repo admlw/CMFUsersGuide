@@ -247,6 +247,19 @@ The script that calls the `makeEventListsFromDecaf.sh` script is located at `Cov
 ```
 The script will start a series of jobs that run locally and in the background to convert each of the possible event selections and horn currents available in the `makeEventListsFromDecaf.sh` script.
 
+This script must be run multiple times to create a complete eventlist. For example, for the `calib-shift-(fd/nd)-xyview-neg-offset` systematic uncertainty, the script must be run in the following configurations:
+
+- near
+  - nonswap
+- far
+  - nonswap
+  - fluxswap
+  - tauswap
+
+If creating a non-systematic sample, you also need to include the other datasets.
+
+This script runs the `CMFCAFToEventLists` module locally. Check each dataset is complete with `htop` to avoid overwhelming the GPVMs. As a general guide, 10 files per iteration works reasonably well.
+
 ### Producing CAF Text Lists
 
 #### cafe macro: get_eventlist.C
