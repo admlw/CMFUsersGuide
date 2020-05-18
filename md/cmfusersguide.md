@@ -1,39 +1,18 @@
 # CMF Users' Guide
-## Authors: Thomas Carroll, Adam Lister & Brian Rebel
-## December 2019
-
-<!-- toc -->
-
-- [Introduction](#Introduction)
-- [Structure](#Structure)
-- [Event Lists](#Event-Lists)
-  * [cmf::EventContainer](#cmfEventContainer)
-  * [cmf::MetaData](#cmfMetaData)
-  * [cmf::SpillSummary](#cmfSpillSummary)
-- [Generating Covariance Matrices](#Generating-Covariance-Matrices)
-  * [Locally](#Locally)
-  * [On The Grid](#On-The-Grid)
-- [Generating Event Lists](#Generating-Event-Lists)
-  * [Producing EventListTree Files](#Producing-EventListTree-Files)
-    + [art Module: CMFCAFToEventLists](#art-Module-CMFCAFToEventLists)
-    + [script: makeEventListsFromDecaf.sh](#script-makeEventListsFromDecafsh)
-    + [script: startEventLists.sh](#script-startEventListssh)
-  * [Producing CAF Text Lists](#Producing-CAF-Text-Lists)
-    + [cafe macro: get_eventlist.C](#cafe-macro-get_eventlistC)
-    + [macro: compareEvents.C](#macro-compareEventsC)
-    + [script: compareEventLists.sh](#script-compareEventListssh)
-  * [Looking for Duplicate Events Among Selections](#Looking-for-Duplicate-Events-Among-Selections)
-    + [macro: compareSelectedSets.C](#macro-compareSelectedSetsC)
-    + [script: compareSelections.sh](#script-compareSelectionssh)
-
-<!-- tocstop -->
+## Thomas Carroll, Harry Hausner, Adam Lister, Brian Rebel and Jenny Thomas
+[TOC]
 
 ## Introduction
-This technote is intended to be a Users' guide documenting how the the Covariance Matrix Fit (CMF) analysis is run start-to-finish such that it is reproducible. 
+
+This Users' guide is intended to be a partner document to the CMF technote, also contained within this docdb entry. It documents the the Covariance Matrix Fit (CMF)  source code as it stands for the production 5 analysis, and provides an example for how the analysis is run start-to-end. 
+
+Development of the CMF code base is primarily done in the nux development branch (`nux-dev-br`).
+
+CMF is developed using the CMake build of NOvASoft, instructions for which can be found at https://cdcvs.fnal.gov/redmine/projects/novaart/wiki/Editing_Code_with_CMake_and_buildtool. Help is nearby on slack at #cmakebuild and #cmf.
 
 ## Structure
 
-The CMF code lives within `nova/CovarianceMatrixFit`. Within this directory there are several directories:
+The CMF code lives within `nova/CovarianceMatrixFit`. Within this directory there are several sub-directories:
 
 ```
 core        : the core classes that CMF is built on: EventLists, 
@@ -44,16 +23,21 @@ lysis
 fhicl       : contains all fhicl files
 macros 	    : useful .C files
 modules     : art modules and plugins which are run with fhicl files
-scripts     : scripts for, i.e. submitting to the grid
-utilities   : only the bin utility lives here, 
-              this may be removed in the future
+scripts     : scripts for, e.g. submitting to the grid
+utilities   : helper utility classes and methods
 ```
 
 ## Event Lists
 
-Event Lists are the event record container used by the CMF framework. A `cmf::EventList` contains a `cmf::EventContainer` object, a `cmf::MetaData` object, and a `cmf::SpillSummary` object.
+`cmf::EventList`s are the event record container used by the CMF framework. 
 
-The Events are defined in `CovarianceMatrixFit/core/Event.h`.
+Inside an EventList ROOT file, there is a set of trees, the first tree is the `metadata` tree, which contains two branches, `metadata` and `spillsummary`.
+
+The `metadata` tree contains information related to the `cmf::MetaData` class (detector, filetype, selection, interaction type, and period of the selected events), while the `spillsummary` tree contains information related to the `cmf::SpillSummary`  class (POT, livetime, and number of spills for each selection).
+
+In addition, there are a set of trees which correspond to a `cmf::EventContainer` for each selection type, for example `MCNearEpoch5FHCBeamNuMuSelQ4NuEBarCC`, which holds information related to the `cmf::EventList` for the selection for the Near Detector/Epoch 5/FHC/NuMuSel Quartile 4/ NuEBarrCC interactions. These trees contain a branch for the event ID (run, subrun, event information), a branch for reconstructed information (`dataVars`), a branch for truth information (`truthVars`),  a branch for different event weights (`weightVars`), and a branch for each of the GENIE weights. Each GENIE weight is stored separately due to the need to store "-2", "-1", "+1" and "+2" sigma values. 
+
+This section goes into more detail about the `cmf::EventContainer`, `cmf::MetaData` and `cmf::SpillSummary` classes.
 
 ### cmf::EventContainer
 
@@ -65,11 +49,11 @@ MCVarVals   : the truth-level variables for the event
               (truth, wieght, and genie variables)
 ```
 
-**N.B.** The names of `DataVarVals` and `MCVarVals` are somewhat misnomers. `DataVarVals`is more akin to reconstructed variables, while the `MCVarVals` is more akin to truth information
+**N.B.** The names of `DataVarVals` and `MCVarVals` are somewhat misnomers. `DataVarVals`is more akin to reconstructed variables, while the `MCVarVals` is more akin to truth information, though it also includes information related to the weights.
 
 ### cmf::MetaData
 
-The `cmf::MetaData` class holds information which full categorises the event:
+The `cmf::MetaData` class holds information which fully categorises 
 ```
 novadaq::cnv::DetID     : detector ID (only ND or FD are really used for CMF):
                           kUNKNOWN_DET
@@ -132,6 +116,31 @@ liveTime        : total live time recorded
 totalNumSpills  : total number of spills
 numGoodSpills   : total number of good spills (passes good run selection)
 ```
+
+## The Core Pieces of Code
+
+### Event
+
+The event record container, `cmf::Event` is defined in `Core/Event.h` and `Core/Event.cxx`. As previously discussed, the `cmf::Event` contains information related to the event ID as well as the dataVarVals and mcVarVals.
+
+The Event defines some useful typedefs:
+
+- `typedef std::unique_ptr<Event> EventPtr;`
+- `typedef std::vector<EventPtr>  EventContainer;`
+- `typedef std::map<cmf::MetaData, cmf::EventList> EventListMap;`
+
+The Event class also contains two methods:
+
+- `SerializeEventListMap`: this helps to create the relevant trees for each selection type
+- `SerializeEvents`: helper function to setup the different branches for the above trees
+
+### Shifter and Weighter
+
+### VarVals
+
+
+
+
 
 ## Generating Covariance Matrices
 
