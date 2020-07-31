@@ -129,17 +129,25 @@ The Event defines some useful typedefs:
 - `typedef std::vector<EventPtr>  EventContainer;`
 - `typedef std::map<cmf::MetaData, cmf::EventList> EventListMap;`
 
-The Event class also contains two methods:
+The Event .cxx file also contains two methods which write EventLists into ROOT files, 
 
 - `SerializeEventListMap`: this helps to create the relevant trees for each selection type
 - `SerializeEvents`: helper function to setup the different branches for the above trees
 
 ### Shifter and Weighter
 
+The ShifterAndWeighter does the work of evaluating how the relative weight of each simulated event changes based on the various systematic uncertainty parameters or the oscillation weights and determining the simulated event energy if a shift in either the hadronic or leptonic portion of the energy is desired.
+
 ### VarVals
 
+VarVals defines how event information is stored in the ROOT files and retrieved at analysis time.  There are several structs and classes used, 
 
-
+- `DataVars`: a struct which contains a small set reconstructed quantities for each event. It also holds a "fake weight" which holds a weight for the events based on exposure or in the case of fake data the total weight we want to assign to the event;
+- `DataVarVals`: a class containing a DataVars and a method to determine the reconstructed neutrino energy based on what the ShifterAndWeighter says should be shifted;
+- `EventID`: a class that uniquely identifies the event based on run, subrun, event, slice and in the case of simulation, MC cycle number;
+-`TruthVars`: a struct containing relevant truth information such as the neutrino flavor, energy, and parent particle;
+-`WeightVars`: a struct containing weighting information that is not contained within the portion of MCVars ;
+-`MCVarVals`: a class containing TruthVars, WeightVars, and a vector of floats corresponding to weights for GENIE-related variables.
 
 
 ## Generating Covariance Matrices
@@ -310,3 +318,6 @@ The `CovarianceMatrixFit/scripts/compareSelections.sh` script calls the `Covaria
   <tag>         : analysis tag, eg 2018, 2019
   <selection X> : nue, numu, nus
 ``````
+### Producing Random Universes
+
+
