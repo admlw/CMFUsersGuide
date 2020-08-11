@@ -216,11 +216,13 @@ The CovarianceMatrixFit package provides an art module to read the decaf or conc
 #### art Module: CMFCAFToEventLists
 The module is located at `CovarianceMatrixFit/modules/CMFCAFToEventLists_module.cc`.  The module is an EDAnalyzer, but does not actually do anything in the analyze method because the CAFs are not art files.  We use a module here to be able to configure the conversion job and because art provides a nice state machine that processes jobs in a particular order.  All the work of the module is done from methods called by the module's `endJob` method.  The `CMFCAFToEventLists::FillVariables()` method calls other methods to fill the `cmf::DataVarVals`, `cmf::EventId` and `cmf::MCVarVals` objects.  It also calls methods to determine if the event passes the event selection determined through the configuration.  The code is the best resource for understanding how these steps are accomplished and details will not be given here.  Once the events have been selected they are written into ROOT TTrees based on the metadata information for each event.  
 
-#### script: makeEventListsFromDecaf.sh
+The module must undergo rewrites for each new production due to changing selections and changing lists of systematic uncertainties. 
 
-The script that runs the above module is located at 
+#### script: makeProductionXEventLists.sh
+
+The script that runs the above module are located at
 ```
-CovarianceMatrixFit/scripts/makeEventListsFromDecaf.sh.
+CovarianceMatrixFit/scripts/makeProuction{4,5}EventLists.sh
 ```
 It has six functions; one function prints the necessary command line inputs to the terminal when the script is called without inputs.  The output from that function is
 ```
@@ -251,8 +253,11 @@ The script configures the art job to produce a text file containing the event id
 The script that calls the `makeEventListsFromDecaf.sh` script is located at `CovarianceMatrixFit/scripts/startEventLists.sh`.  If the script is called without arguments it prints the necessary command line inputs to the terminal,
 ```
   Usage                 : startEventLists.sh 
-                          <detector> <file type> <files per iteration> 
+                          <production> <detector> <file type> <files per iteration> 
                           <tag> <systematic_name>
+  <production>          : Production number of the analysis, i.e. 4,5. 
+  						  This configures which makeProductionXEventLists.sh script
+  						  to run.
   <detector>            : Near or Far
   <file type>           : data, nonswap, fluxswap, 
                           tauswap, cosmicbackground, 
@@ -262,7 +267,7 @@ The script that calls the `makeEventListsFromDecaf.sh` script is located at `Cov
   <outdir>              : location where the output root files should go
   <systematic name>     : optional name for systematically shifted set
 ```
-The script will start a series of jobs that run locally and in the background to convert each of the possible event selections and horn currents available in the `makeEventListsFromDecaf.sh` script.
+The script will start a series of jobs that run locally and in the background (using `nohup`) to convert each of the possible event selections and horn currents available in the `makeEventListsFromDecaf.sh` script.
 
 This script must be run multiple times to create a complete eventlist. For example, for the `calib-shift-(fd/nd)-xyview-neg-offset` systematic uncertainty, the script must be run in the following configurations:
 
@@ -272,8 +277,6 @@ This script must be run multiple times to create a complete eventlist. For examp
   - nonswap
   - fluxswap
   - tauswap
-
-If creating a non-systematic sample, you also need to include the other datasets.
 
 This script runs the `CMFCAFToEventLists` module locally. Check each dataset is complete with `htop` to avoid overwhelming the GPVMs. As a general guide, 10 files per iteration works reasonably well.
 
