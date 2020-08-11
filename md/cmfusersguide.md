@@ -1,6 +1,38 @@
 # CMF Users' Guide
 ## Thomas Carroll, Harry Hausner, Adam Lister, Brian Rebel and Jenny Thomas
-[TOC]
+Table of Contents
+=================
+
+   * [CMF Users' Guide](#cmf-users-guide)
+      * [Thomas Carroll, Harry Hausner, Adam Lister, Brian Rebel and Jenny Thomas](#thomas-carroll-harry-hausner-adam-lister-brian-rebel-and-jenny-thomas)
+      * [Introduction](#introduction)
+      * [Structure](#structure)
+      * [Event Lists](#event-lists)
+         * [cmf::EventContainer](#cmfeventcontainer)
+         * [cmf::MetaData](#cmfmetadata)
+         * [cmf::SpillSummary](#cmfspillsummary)
+      * [The Core Pieces of Code](#the-core-pieces-of-code)
+         * [Event](#event)
+         * [ShifterAndWeighter](#shifterandweighter)
+         * [VarVals](#varvals)
+      * [Generating Covariance Matrices](#generating-covariance-matrices)
+         * [Locally](#locally)
+         * [On The Grid](#on-the-grid)
+      * [Generating Event Lists](#generating-event-lists)
+         * [Producing EventListTree Files](#producing-eventlisttree-files)
+            * [art Module: CMFCAFToEventLists](#art-module-cmfcaftoeventlists)
+            * [script: makeProductionXEventLists.sh](#script-makeproductionxeventlistssh)
+            * [script: startEventLists.sh](#script-starteventlistssh)
+         * [Producing CAF Text Lists](#producing-caf-text-lists)
+            * [cafe macro: get_eventlist.C](#cafe-macro-get_eventlistc)
+            * [macro: compareEvents.C](#macro-compareeventsc)
+            * [script: compareEventLists.sh](#script-compareeventlistssh)
+         * [Looking for Duplicate Events Among Selections](#looking-for-duplicate-events-among-selections)
+            * [macro: compareSelectedSets.C](#macro-compareselectedsetsc)
+            * [script: compareSelections.sh](#script-compareselectionssh)
+      * [Random Universes](#random-universes)
+         * [Random Universe Generation](#random-universe-generation)
+      * [Sensitivity Contour Production](#sensitivity-contour-production)
 
 ## Introduction
 
@@ -8,18 +40,16 @@ This Users' guide is intended to be a partner document to the CMF technote, also
 
 Development of the CMF code base is primarily done in the nux development branch (`nux-dev-br`).
 
-CMF is developed using the CMake build of NOvASoft, instructions for which can be found at https://cdcvs.fnal.gov/redmine/projects/novaart/wiki/Editing_Code_with_CMake_and_buildtool. Help is nearby on slack at #cmakebuild and #cmf.
+CMF is developed using the CMake build of NOvASoft, instructions for which can be found [here](https://cdcvs.fnal.gov/redmine/projects/novaart/wiki/Editing_Code_with_CMake_and_buildtool). Help is nearby on slack at #cmakebuild and #cmf.
 
 ## Structure
 
-The CMF code lives within `nova/CovarianceMatrixFit`. Within this directory there are several sub-directories:
+The CMF code lives within `novasoft/CovarianceMatrixFit`. Within this directory there are several sub-directories:
 
 ```
-core        : the core classes that CMF is built on: EventLists, 
-              VarVals, ShifterAndWeighter
+core        : the core classes that CMF is built on: EventLists, VarVals, ShifterAndWeighter
 data        : contains root files for calibration systematic uncertainties
-dataProducts: data products and structs commonly used in CMF ana
-lysis
+dataProducts: data products and structs commonly used in CMF analysis
 fhicl       : contains all fhicl files
 macros 	    : useful .C files
 modules     : art modules and plugins which are run with fhicl files
@@ -134,7 +164,7 @@ The Event .cxx file also contains two methods which write EventLists into ROOT f
 - `SerializeEventListMap`: this helps to create the relevant trees for each selection type
 - `SerializeEvents`: helper function to setup the different branches for the above trees
 
-### Shifter and Weighter
+### ShifterAndWeighter
 
 The ShifterAndWeighter does the work of evaluating how the relative weight of each simulated event changes based on the various systematic uncertainty parameters or the oscillation weights and determining the simulated event energy if a shift in either the hadronic or leptonic portion of the energy is desired.
 
@@ -142,12 +172,12 @@ The ShifterAndWeighter does the work of evaluating how the relative weight of ea
 
 VarVals defines how event information is stored in the ROOT files and retrieved at analysis time.  There are several structs and classes used, 
 
-- `DataVars`: a struct which contains a small set reconstructed quantities for each event. It also holds a "fake weight" which holds a weight for the events based on exposure or in the case of fake data the total weight we want to assign to the event;
-- `DataVarVals`: a class containing a DataVars and a method to determine the reconstructed neutrino energy based on what the ShifterAndWeighter says should be shifted;
-- `EventID`: a class that uniquely identifies the event based on run, subrun, event, slice and in the case of simulation, MC cycle number;
--`TruthVars`: a struct containing relevant truth information such as the neutrino flavor, energy, and parent particle;
--`WeightVars`: a struct containing weighting information that is not contained within the portion of MCVars ;
--`MCVarVals`: a class containing TruthVars, WeightVars, and a vector of floats corresponding to weights for GENIE-related variables.
+- `DataVars`		: a struct which contains a small set reconstructed quantities for each event. It also holds a "fake weight" which holds a weight for the events based on exposure or in the case of fake data the total weight we want to assign to the event;
+- `DataVarVals`  : a class containing a DataVars and a method to determine the reconstructed neutrino energy based on what the ShifterAndWeighter says should be shifted;
+- `EventID`          : a class that uniquely identifies the event based on run, subrun, event, slice and in the case of simulation, MC cycle number;
+- `TruthVars`  : a struct containing relevant truth information such as the neutrino flavor, energy, and parent particle;
+- `WeightVars`: a struct containing weighting information that is not contained within the portion of MCVars 
+- `MCVarVals`  : a class containing TruthVars, WeightVars, and a vector of floats corresponding to  systematic uncertainties
 
 
 ## Generating Covariance Matrices
@@ -321,13 +351,17 @@ The `CovarianceMatrixFit/scripts/compareSelections.sh` script calls the `Covaria
   <tag>         : analysis tag, eg 2018, 2019
   <selection X> : nue, numu, nus
 ``````
-### Producing Random Universes
+## Random Universes
 
-We want to be able to test how an analysis responds to the conditions of having different values for systematic uncertainties as well as statistical fluctuations.  Each combination of systematic uncertainties and oscillation parameters is referred to as a "random universe".  The `CovarianceMatrixFit/modules/CMFRandomUniverses_plugin.cc` handles the creation of random universes.  It can be configured to either produce universes with a fixed set of input oscillation parameters, as one would want when testing Asimov and median sensitivities, or universes with any of the oscillation parameters varied as one would want when doing a Feldman-Cousins style analysis.  In either case, the systematic parameters can be varied within their allowed ranges for each simulated universe.  A single set of values is used for each universe.  When generating combinations of oscillation parameters, typically a few parameters would be held fixed while others would vary.  For example, you might fix $/Deltam^{2}_{32}$ and $/theta_{23}$ but vary $/delta_{CP}$ and $/theta_{13}$ from universe to universe.  
+We want to be able to test how an analysis responds to the conditions of having different values for systematic uncertainties as well as statistical fluctuations.  Each combination of systematic uncertainties and oscillation parameters is referred to as a "random universe".  
 
-The plugin can be run interactively to produce a small $( < 1000)$ number of random universes or on the grid to produce a small number of universes for each instance of the grid submission. In either case, the `CovarianceMatrixFit/fhicl/cmf_randomuniversesjob.fcl` is used to control the job.  That configuration file cannot be run as it is in the repository as it has some placeholder values that are made to be easily changed by sed when submitting to the grid. The individual configurations for either Feldman-Cousins style or Asimov/Median style running are located in `CovarianceMatrixFit/fhicl/CMF_RandomUniverses.fcl`.
+### Random Universe Generation
 
-### Sensitivity Contour Production
+The `CovarianceMatrixFit/modules/CMFRandomUniverses_plugin.cc` handles the creation of random universes.  It can be configured to either produce universes with a fixed set of input oscillation parameters, as one would want when testing Asimov and median sensitivities, or universes with any of the oscillation parameters varied as one would want when doing a Feldman-Cousins style analysis.  In either case, the systematic parameters can be varied within their allowed ranges for each simulated universe.  A single set of values is used for each universe.  When generating combinations of oscillation parameters, typically a few parameters would be held fixed while others would vary.  For example, you might fix  &Delta;m<sup>2</sup><sub>32</sub> and &theta;<sub>23</sub> but vary &delta;<sub>CP</sub> and &theta;<sub>13</sub> from universe to universe.  
+
+The plugin can be run interactively to produce a small (< 1000) number of random universes or on the grid to produce a small number of universes for each instance of the grid submission. In either case, the `CovarianceMatrixFit/fhicl/cmf_randomuniversesjob.fcl` is used to control the job.  That configuration file cannot be run as it is in the repository as it has some placeholder values that are made to be easily changed by sed when submitting to the grid. The individual configurations for either Feldman-Cousins style or Asimov/Median style running are located in `CovarianceMatrixFit/fhicl/CMF_RandomUniverses.fcl`.
+
+## Sensitivity Contour Production
 
 There are several steps to producing sensitivity contours.  
 
