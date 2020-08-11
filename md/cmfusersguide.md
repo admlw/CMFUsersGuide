@@ -1,23 +1,30 @@
 # CMF Users' Guide
 ## Thomas Carroll, Harry Hausner, Adam Lister, Brian Rebel and Jenny Thomas
+
+
 Table of Contents
 =================
 
-   * [CMF Users' Guide](#cmf-users-guide)
-      * [Thomas Carroll, Harry Hausner, Adam Lister, Brian Rebel and Jenny Thomas](#thomas-carroll-harry-hausner-adam-lister-brian-rebel-and-jenny-thomas)
-      * [Introduction](#introduction)
-      * [Structure](#structure)
-      * [Event Lists](#event-lists)
+   * [Introduction](#introduction)
+   * [Event Lists](#event-lists)
          * [cmf::EventContainer](#cmfeventcontainer)
          * [cmf::MetaData](#cmfmetadata)
          * [cmf::SpillSummary](#cmfspillsummary)
-      * [The Core Pieces of Code](#the-core-pieces-of-code)
+   * [CMF Overview](#cmf-overview)
+      * [Structure](#structure)
+      * [core](#core)
          * [Event](#event)
          * [ShifterAndWeighter](#shifterandweighter)
          * [VarVals](#varvals)
-      * [Generating Covariance Matrices](#generating-covariance-matrices)
-         * [Locally](#locally)
-         * [On The Grid](#on-the-grid)
+         * [Spectrum Tools](#spectrum-tools)
+      * [data](#data)
+      * [dataProducts](#dataproducts)
+      * [fhicl](#fhicl)
+      * [macros](#macros)
+      * [modules](#modules)
+      * [scripts](#scripts)
+      * [utilities](#utilities)
+   * [Instructions](#instructions)
       * [Generating Event Lists](#generating-event-lists)
          * [Producing EventListTree Files](#producing-eventlisttree-files)
             * [art Module: CMFCAFToEventLists](#art-module-cmfcaftoeventlists)
@@ -30,11 +37,16 @@ Table of Contents
          * [Looking for Duplicate Events Among Selections](#looking-for-duplicate-events-among-selections)
             * [macro: compareSelectedSets.C](#macro-compareselectedsetsc)
             * [script: compareSelections.sh](#script-compareselectionssh)
+      * [Generating Covariance Matrices](#generating-covariance-matrices)
+         * [Locally](#locally)
+         * [On The Grid](#on-the-grid)
       * [Random Universes](#random-universes)
          * [Random Universe Generation](#random-universe-generation)
       * [Sensitivity Contour Production](#sensitivity-contour-production)
 
-## Introduction
+# Introduction
+
+
 
 This Users' guide is intended to be a partner document to the CMF technote, also contained within this docdb entry. It documents the the Covariance Matrix Fit (CMF)  source code as it stands for the production 5 analysis, and provides an example for how the analysis is run start-to-end. 
 
@@ -42,22 +54,9 @@ Development of the CMF code base is primarily done in the nux development branch
 
 CMF is developed using the CMake build of NOvASoft, instructions for which can be found [here](https://cdcvs.fnal.gov/redmine/projects/novaart/wiki/Editing_Code_with_CMake_and_buildtool). Help is nearby on slack at #cmakebuild and #cmf.
 
-## Structure
 
-The CMF code lives within `novasoft/CovarianceMatrixFit`. Within this directory there are several sub-directories:
 
-```
-core        : the core classes that CMF is built on: EventLists, VarVals, ShifterAndWeighter
-data        : contains root files for calibration systematic uncertainties
-dataProducts: data products and structs commonly used in CMF analysis
-fhicl       : contains all fhicl files
-macros 	    : useful .C files
-modules     : art modules and plugins which are run with fhicl files
-scripts     : scripts for, e.g. submitting to the grid
-utilities   : helper utility classes and methods
-```
-
-## Event Lists
+# Event Lists
 
 `cmf::EventList`s are the event record container used by the CMF framework. 
 
@@ -147,7 +146,28 @@ totalNumSpills  : total number of spills
 numGoodSpills   : total number of good spills (passes good run selection)
 ```
 
-## The Core Pieces of Code
+
+
+# CMF Overview
+
+## Structure
+
+The CMF code lives within `novasoft/CovarianceMatrixFit`. Within this directory there are several sub-directories:
+
+```
+core        : the core classes that CMF is built on: EventLists, VarVals, ShifterAndWeighter
+data        : contains root files for calibration systematic uncertainties
+dataProducts: data products and structs commonly used in CMF analysis
+fhicl       : contains all fhicl files
+macros 	    : useful .C files
+modules     : art modules and plugins which are run with fhicl files
+scripts     : scripts for, e.g. submitting to the grid
+utilities   : helper utility classes and methods
+```
+
+
+
+## core
 
 ### Event
 
@@ -179,61 +199,27 @@ VarVals defines how event information is stored in the ROOT files and retrieved 
 - `WeightVars`: a struct containing weighting information that is not contained within the portion of MCVars 
 - `MCVarVals`  : a class containing TruthVars, WeightVars, and a vector of floats corresponding to  systematic uncertainties
 
+### Spectrum Tools
 
-## Generating Covariance Matrices
+The SpectrumTools class has one purpose: it takes in an event list and a given point in parameter space and fills a spectrum, applying oscillation and systematic weights based on the point in parameter space.
 
-This section contains information on how to generate covariance matrices for a given systematic uncertainty both locally.
+## data
 
-### Locally
+## dataProducts
 
-In order to generate a covariance matrix locally, a single fhicl file can be run 
+## fhicl
 
-```
-cmf_covariancematrixmakerjob.fcl
-```
+## macros
 
-**N.B.** Ensure you're using the CMF version of this file. Another version, `covariancematrixmakerjob.fcl` exists, but is related to the FNEX framework and is deprecated.
+## modules
 
-Inside this fhicl file, there are three options that a user should configure:
+## scripts
 
-```
-TREEFILE  : Path to EventList file. 
-            For now these are located in /nova/ana/users/brebel/skimmed
-SYSTPAR   : Systematic parameter to vary
-NUMITER   : Number of iterations of the systematic to run 
-            (i.e. number of universes)
-```
+## utilities
 
-The options for which systematics you can choose can be found in `CMF_SystematicParameters.fcl`
 
-Once these substitutions have been made, a covariance matrix can be generated with the following command
 
-```
-art -c cmf_covariancematrixmakerjob.fcl
-```
-### On The Grid
-
-Running on the grid is made easy by the existence of a bash script, located in 
-```
-CovarianceMatrixFit/scripts/CMF_Run_Covariance_Grid.sh
-```
-which has a usage:
-```
-usage           : CMF_Run_Covariance_Grid.sh 
-                  <systematics> 
-                  <eventlist file> 
-                  <local products> 
-                  <output dir>
-<systematics>   : specify one of 
-                  calib, genie, mec, nue, norm, reco, xsec1, xsec2, xsec3
-<eventlist file>: full path to event list tree file in pnfs
-<local products>: name of the local products directory
-<output dir>    : top level directory for output matrix root files
-```
-
-where the `<local products>` is the name of a tar file (without the `.tar.bz2`) which should be stored in your scratch area (`/pnfs/scratch/users/${USER}`.
-
-This script by default will run a set of several uncertainties defined by the `<systematics>` tag. Each systematic uncertainty will have by default 2000 systematic universes across 200 grid jobs. This can be modified by changing the variables in the `setVariables()` function in the bash script.
+# Instructions
 
 ## Generating Event Lists
 
@@ -351,6 +337,69 @@ The `CovarianceMatrixFit/scripts/compareSelections.sh` script calls the `Covaria
   <tag>         : analysis tag, eg 2018, 2019
   <selection X> : nue, numu, nus
 ``````
+
+
+## Generating Covariance Matrices
+
+This section contains information on how to generate covariance matrices for a given systematic uncertainty both locally.
+
+### Locally
+
+In order to generate a covariance matrix locally, a single fhicl file can be run 
+
+```
+cmf_covariancematrixmakerjob.fcl
+```
+
+**N.B.** Ensure you're using the CMF version of this file. Another version, `covariancematrixmakerjob.fcl` exists, but is related to the FNEX framework and is deprecated.
+
+Inside this fhicl file, there are three options that a user should configure:
+
+```
+TREEFILE  : Path to EventList file. 
+            For now these are located in /nova/ana/users/brebel/skimmed
+SYSTPAR   : Systematic parameter to vary
+NUMITER   : Number of iterations of the systematic to run 
+            (i.e. number of universes)
+```
+
+The options for which systematics you can choose can be found in `CMF_SystematicParameters.fcl`
+
+Once these substitutions have been made, a covariance matrix can be generated with the following command
+
+```
+art -c cmf_covariancematrixmakerjob.fcl
+```
+
+### On The Grid
+
+Running on the grid is made easy by the existence of a bash script, located in 
+
+```
+CovarianceMatrixFit/scripts/CMF_Run_Covariance_Grid.sh
+```
+
+which has a usage:
+
+```
+usage           : CMF_Run_Covariance_Grid.sh 
+                  <systematics> 
+                  <eventlist file> 
+                  <local products> 
+                  <output dir>
+<systematics>   : specify one of 
+                  calib, genie, mec, nue, norm, reco, xsec1, xsec2, xsec3
+<eventlist file>: full path to event list tree file in pnfs
+<local products>: name of the local products directory
+<output dir>    : top level directory for output matrix root files
+```
+
+where the `<local products>` is the name of a tar file (without the `.tar.bz2`) which should be stored in your scratch area (`/pnfs/scratch/users/${USER}`.
+
+This script by default will run a set of several uncertainties defined by the `<systematics>` tag. Each systematic uncertainty will have by default 2000 systematic universes across 200 grid jobs. This can be modified by changing the variables in the `setVariables()` function in the bash script.
+
+
+
 ## Random Universes
 
 We want to be able to test how an analysis responds to the conditions of having different values for systematic uncertainties as well as statistical fluctuations.  Each combination of systematic uncertainties and oscillation parameters is referred to as a "random universe".  
