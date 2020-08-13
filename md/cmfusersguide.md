@@ -205,7 +205,21 @@ The SpectrumTools class has one purpose: it takes in an event list and a given p
 
 ## data
 
+This directory houses the files which store the CMF file systematic uncertainties, for example, calibration systematic uncertainties
+
 ## dataProducts
+
+This directory contains all of the cmf classes, structs and other definitions used by CMF modules. 
+
+- **Constants.h** contains constant variables which are used through the rest of CMF.
+- **StaticFuncs.h** contains helper functions.
+- **Structs.h** contains structs, primarily the cmf::MetaData and cmf::SpillSummary.
+- **InputPoint.cxx/h** contains the InputPoint class, which defines a given point in parameter space including both oscillation parameters and systematic parameters.
+- **PointResult.cxx/h** contains the PointResult class, which contains information related to the fit result at a given point in parameter space, for example the &chi;<sup>2</sup> value, and predicted spectrum. This is used in the case where a fit is performed using the CovarianceMatrixFitter plugin.
+- **GridPointResult.cxx/h** contains the LibraryPoint and PredictionPoint classes, as well as classes they depend on (GridPoint, HiddenParameters, HiddenParamPoint, LPUniverseFitResult). These are used in the case where sensitivities are produced using a prediction library.
+- **FakeUniverse.cxx/h** contains the FakeUniverse class, which wraps up an InputPoint with the asimov and poisson-fluctuated fake data.
+
+
 
 ## fhicl
 
