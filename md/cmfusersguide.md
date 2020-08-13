@@ -234,13 +234,28 @@ In general, there is a configuration-level fhicl file for each job-level fhicl f
 
 ## macros
 
-The macros directory contains handy macros for producing plots. Note that some of the macros must be compiled with the rest of novasoft as they hook into some of the CMF code. Each of the macros which must be compiled have a corresponding `art_make_exec` listing in the CMakeLists.txt
+The macros directory contains handy macros for producing plots. Note that some of the macros must be compiled with the rest of novasoft as they hook into some of the CMF code. Each of the macros which must be compiled have a corresponding `art_make_exec` listing in the CMakeLists.txt.
 
 ## modules
 
+This directory contains the CMF modules and plugins which perform the bulk of the CMF analysis. A non-exhaustive list of important modules/plugins is as follows:
+
+- `CovarianceMatrixMaker_plugin.cc` handles production of the covariance matrices.
+- `CMFRandomUniverses_plugin.cc` handles generation of poisson-fluctuated and systematically shifted random universes.
+- `CMFPredictionLibrary_plugin.cc` generates libraries of predictions at a given point in parameter space with a configurable number of predictions for each hidden parameter.  This is generally used for sensitivities.
+- `CovarianceMatrixFitter_plugin.cc` calls MINUIT to perform a fit for a given set of oscillation parameters
+- `CMFLibraryContourMaker_plugin.cc` uses the output of the prediction library or the fitter in order to construct a &Delta;&chi;<sup>2</sup> space, and contours.
+- `EventListManipulator.cxx/h` is used for interpreting the Event List data format 
+
 ## scripts
 
+The scripts directory holds a set of bash scripts to make job running and submission easier. There is a README which provides a description of what each of the scripts does.
+
+
+
 ## utilities
+
+This directory holds a set of utility classes which are generally accessed by multiple CMF modules. 
 
 
 
