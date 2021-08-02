@@ -393,7 +393,7 @@ cmf_covariancematrixmakerjob.fcl
 
 **N.B.** Ensure you're using the CMF version of this file. Another version, `covariancematrixmakerjob.fcl` exists, but is related to the FNEX framework and is deprecated.
 
-Inside this fhicl file, there are three options that a user should configure:
+Inside this fhicl file, there are four options that a user should configure:
 
 ```
 TREEFILE  : Path to EventList file. 
@@ -401,9 +401,10 @@ TREEFILE  : Path to EventList file.
 SYSTPAR   : Systematic parameter to vary
 NUMITER   : Number of iterations of the systematic to run 
             (i.e. number of universes)
+DBS_SET   : The selections to use for the universes (e.g. dbs_nd_fd_fhc_numuconcat_nc)
 ```
 
-The options for which systematics you can choose can be found in `CMF_SystematicParameters.fcl`
+The options for which systematics you can choose can be found in `CMF_SystematicParameters.fcl`. Note that by default the EventList is assumed to be uncapped, i.e. the `TreeDirectories` label is set to `list/full`.
 
 Once these substitutions have been made, a covariance matrix can be generated with the following command
 
@@ -422,19 +423,17 @@ CovarianceMatrixFit/scripts/CMF_Run_Covariance_Grid.sh
 which has a usage:
 
 ```
-usage           : CMF_Run_Covariance_Grid.sh 
-                  <systematics> 
-                  <eventlist file> 
-                  <local products> 
-                  <output dir>
-<systematics>   : specify one of 
-                  calib, genie, mec, nue, norm, reco, xsec1, xsec2, xsec3
-<eventlist file>: full path to event list tree file in pnfs
-<local products>: name of the local products directory
-<output dir>    : top level directory for output matrix root files
+usage            : CMF_Run_Covariance_Grid.sh <version> <qualifiers> <systematics> <eventlist file> <local products> <output dir>"
+<version>        : specify version of novasoft to use"
+<qualifiers>     : specify qualifiers for the version of novasoft"
+<systematics>    : specify one of calib, genie, mec, nue, norm, reco, xsec1, xsec2, xsec3"
+<selections>     : specify selections to use, e.g. dbs_nd_fd_fhc_numuconcat_nc"
+<eventlist file> : full path to event list tree file in pnfs"
+<local products> : name of the local products directory"
+<output dir>     : top level directory for output matrix root files"
 ```
 
-where the `<local products>` is the name of a tar file (without the `.tar.bz2`) which should be stored in your scratch area (`/pnfs/scratch/users/${USER}`.
+where the `<local products>` is the name of a tar file (without the `.tar.bz2`) which should be stored in your resilient area (`/pnfs/nova/resilient/users/${USER}`).
 
 This script by default will run a set of several uncertainties defined by the `<systematics>` tag. Each systematic uncertainty will have by default 2000 systematic universes across 200 grid jobs. This can be modified by changing the variables in the `setVariables()` function in the bash script.
 
@@ -448,16 +447,38 @@ We want to be able to test how an analysis responds to the conditions of having 
 
 The `CovarianceMatrixFit/modules/CMFRandomUniverses_plugin.cc` handles the creation of random universes.  It can be configured to either produce universes with a fixed set of input oscillation parameters, as one would want when testing Asimov and median sensitivities, or universes with any of the oscillation parameters varied as one would want when doing a Feldman-Cousins style analysis.  In either case, the systematic parameters can be varied within their allowed ranges for each simulated universe.  A single set of values is used for each universe.  When generating combinations of oscillation parameters, typically a few parameters would be held fixed while others would vary.  For example, you might fix  &Delta;m<sup>2</sup><sub>32</sub> and &theta;<sub>23</sub> but vary &delta;<sub>CP</sub> and &theta;<sub>13</sub> from universe to universe.  
 
-The plugin can be run interactively to produce a small (< 1000) number of random universes or on the grid to produce a small number of universes for each instance of the grid submission. In either case, the `CovarianceMatrixFit/fhicl/cmf_randomuniversesjob.fcl` is used to control the job.  That configuration file cannot be run as it is in the repository as it has some placeholder values that are made to be easily changed by sed when submitting to the grid. The individual configurations for either Feldman-Cousins style or Asimov/Median style running are located in `CovarianceMatrixFit/fhicl/CMF_RandomUniverses.fcl`.
+The plugin can be run interactively to produce a small (< 100) number of random universes or on the grid to produce a small number of universes for each instance of the grid submission. In either case, the `CovarianceMatrixFit/fhicl/cmf_randomuniversesjob.fcl` is used to control the job.  That configuration file cannot be run as it is in the repository as it has some placeholder values that are made to be easily changed by sed when submitting to the grid. The individual configurations for either Feldman-Cousins style or Asimov/Median style running are located in `CovarianceMatrixFit/fhicl/CMF_RandomUniverses.fcl`.
+
+Note that generating random universes with systematic fluctuations takes significantly longer than a Poisson fluctuated universe (approx. 24 hours locally for a single systematicly fluctuated universe). Bare this in mind when submitting grid jobs.
 
 ## Sensitivity Contour Production
 
-There are several steps to producing sensitivity contours.  
+There are several steps to producing sensitivity contours from the random universes and prediction libraries.
 
-The first is to generate the necessary random universe file(s) as described above.
-
-The second step is to run the `CovarianceMatrixFit/modules/CMFPredictionLibrary_plugin.cc` over the random universe file. This plugin is meant to be run for each point to be tested in the 2 dimensional space of interest, for example $/Deltam^{2}_{32}$ vs $sin^{2}/theta_{23}$. It generates a list of prediction libraries based on the Asimov MC expectation for the chosen point in space at a predefined sampling of the other relevant oscillation parameters, ie $/delta_{CP}$ and $/theta_{13}$. We pick the sampling of these "hidden parameters" to be sufficiently fine-grained so that the change from set to the next is not very large. These predefined samplings are the prediction libraries and are stored as vectors by the code. The advantage is that we are able to avoid a MINUIT style fit and simply calculate a number of $/chi^{2}$ values for each point in space more efficiently. The hidden parameters corresponding to the lowest $/chi^{2}$ value are stored as the best fit for that point in the parameter space. The specific data product stored is the `LibraryPoint` defined in `CovarianceMatrixFit/dataProducts/GridPointResult.h`. The plugin creates these data products for both the Asimov universe and any random universes used, labeled either "Asimov" or "Random" in the output file.
-
-The CMFPredictionLibrary_plugin.cc is run on the grid for each point in the space through the `CovarianceMatrixFit/scripts/CMF_Submit_PredictionLibrary.sh` script. The available configurations for generating prediction libraries are defined in `CovarianceMatrixFit/fhicl/CMF_PredictionLibrary.fcl` and the job configuration file is `CovarianceMatrixFit/fhicl/cmf_predictionlibraryjob.fcl`. As with the random universe job configuration file, there are placeholder values in the prediction library job configuration file which enable to be run easily on the grid but which need to be changed for interactive tests.
-
-Once the prediction library jobs are completed, the output root files with `result` in the name contain the produced data products that can be used to create the contours. The `CovarianceMatrixFit/modules/CMFLibraryContourMaker_plugin.cc` plugin is used to make the contours.  This plugin makes contours for the Asimov universe and each random universe. It is configured through the `CovarianceMatrixFit/fhicl/cmf_librarycontourmakerjob.fcl` file which uses individual configurations from `CovarianceMatrixFit/fhicl/CMF_LibraryContourMaker.fcl`. The job should be run interactively over a list of the results files from the prediction library jobs. We chose to use a list rather than concatenate the results files as a full concatenation takes more time and also results in a very large file. The output of the contour maker plugin is a ROOT file containing histograms and graphs for each universe (random and Asimov). 
+The first step is to run the `cmf_gridpointsbestfitjob.fcl` over the random universe file and prediction libraries as `art -c cmf_gridpointsbestfitjob.fcl <Random Universe File> <Prediction Library>`. This is best done on the grid with the `CMF_Submit_GridPoints.sh` script. This script configures the fhicl configuration to replace `MATRIXFILE` with the name of the matrix file to use, `PAR1PAR2` with the name of the parameter configuration to use, `STARTUNI` with the universe to start with, `FIRSTRUN` with a run number which will not overlap with another job's output, `NUMUNI` with the number of universes per job to run, and `<X/Y><MIN/MAX>VAL` with the range of the parameters to use. Additionally, the job can be configured to sample only a fraction of the prediction library. It is recommended to set the sampling fraction to 0.10 for internal studies as it can significantly speed up the job. For the proper analysis however the sampling fraction should be set to 1.00. The script has the usage:
+```
+Usage: CMF_Submit_GridPoints.sh <grid type> <novasoft version> <qualifiers> <analysis tag> <local products directory name> <output directory> <random universe file> <covariance matrix file> <parameters> <min for param 1> <max for param 1> <min for param 2> <max for param 2> <number of universes> <universes per job> <scanning fraction> <scanning seed> <scaled ND expsoure?> [OPTIONAL] <filling in missing?>
+<grid type>                     : FNAL or UW
+<novasoft version>              : the version of novasoft to use
+<qualifiers>                    : the qualifiers for the novasoft version to use, ie eXX:grid:prof
+<analysis tag>                  : tag for the analysis run, eg 2018
+<local products directory name> : the base name of the directory containing your build of the novasoft ups product
+<output directory>              : the top level directory where the job output should go, ie /nova/app/<your username> 
+<random universe file>          : full path to the random universe file in pnfs resilient area
+<covariance matrix file>        : full path to the covariance matrix file in pnfs resilient area
+<parameters>                    : which parameters form your grid, e.g. Th24Dmsq41 or Th24Dmsq41_statonly
+<min for param 1>               : minimum value of the first parameter to be use
+<max for param 1>               : maximum value of the first parameter to be use
+<min for param 2>               : minimum value of the second parameter to be use
+<max for param 2>               : maximum value of the second parameter to be use
+<number of universes>           : how many universes to look at total
+<universes per job>             : how many universes to look at per job
+<sampling fraction>             : what fraction of the prediction libraries to sample
+<sampling seed>                 : what seed to use for the prediction library sample
+<scaled ND expsoure?>           : Scale the ND exposure? true or false
+The following arguments are required for filling in missing outputs
+<filling in missing?>           : just say true to redo missing jobs
+```
+The jobs will return outputs containing the raw &chi<sup>2</sup> values for a section of XY-grid space for some of the random universes. These outputs are then supplied as the imput for the `cmf_contourfromgridjob.fcl` job, which is to be run locally. It is recommended that the locations for the grid point outputs are listed in a file (using the xrootd path, if nesicarry) which can then be fed into the job as `art -c cmf_contourfromgridjob.fcl -S <source list>`. The fhicl need only be configured to correct grid parameters by changing `PAR1PAR2` to the correct configuration from `CMF_ContourFromGrid.fcl`. As this job takes several hours it is recommended to run the job under `nohup` or your perferred method for ensure your jobs are not killed should you be disconnected from the GPVM.
+  
+This process should give you a root file with the sensitivity contours for your random universes.
